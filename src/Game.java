@@ -3,7 +3,8 @@ import java.awt.*;
 
 public class Game{
 
-    static final int height =  Toolkit.getDefaultToolkit().getScreenSize().height - 100;
+  //  static final int height =  Toolkit.getDefaultToolkit().getScreenSize().height - 100;
+    static final int height =  600;
     static final int width = height/2;
     JFrame jFrame;
     Board board;
@@ -18,7 +19,7 @@ public class Game{
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         jFrame.setLayout(new FlowLayout());
 
-        jFrame.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width/2-width/2,0);
+        jFrame.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width/2-width,100);
         jFrame.setResizable(false);
         jFrame.setVisible(true);
         jFrame.pack();

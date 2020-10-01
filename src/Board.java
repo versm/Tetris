@@ -2,152 +2,165 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class Board extends JPanel implements  ActionListener {
+public class Board extends JPanel implements ActionListener {
 
-    final int NUMBER_OF_COLUMNS= 10;
-    final int NUMBER_OF_ROWS= 20;
-    final int boardCellSize = Game.height/20;
+    final int NUMBER_OF_COLUMNS = 10;
+    final int NUMBER_OF_ROWS = 20;
+    final int cellSize = Game.height / 20;
 
-    Shape [][] board;
-    Shape currentShape;
     Timer timer;
     boolean isFalling;
-    boolean gameStarted;
+    boolean gameStared;
+    boolean gamePaused;
 
+    int[][] board;
+    int currentY = 0;     // Coordinates on board from which new elements begin to fall
+    int currentX;       // Value of X depends on shape's width
+    Shape currentShape;
+    Shape nextShape;
+    List<Shape> allShapesOnBoard;
+    int[][] coordinatesOfCurrentShape;
 
-    public Board(){
-        this.setPreferredSize(new Dimension(Game.width,Game.height));
+    public Board() {
+        this.setPreferredSize(new Dimension(Game.width, Game.height));
         this.setBackground(Color.BLACK);
         this.setLayout(null);
 
-        timer = new Timer(900,this);
-        //timer.start();
+        board = new int[24][10];
+        coordinatesOfCurrentShape = new int[4][2];
+        allShapesOnBoard = new ArrayList<>();
 
-        board = new Shape[NUMBER_OF_ROWS][NUMBER_OF_COLUMNS];
+        for (int[] ints : board) Arrays.fill(ints, -1);       //-1 means no element on this index
 
-        for (int i = 0; i < NUMBER_OF_ROWS; i++) {
-            for (int j = 0; j < NUMBER_OF_COLUMNS; j++) {
-                Shape shape = new Shape(i,j);
-                board[i][j] = shape;
-                shape.setBounds(j * boardCellSize, i * boardCellSize, boardCellSize, boardCellSize);
-                shape.setBackground(Color.BLACK);
+        timer = new Timer(400, this);
 
-                this.add(shape);
-            }
-        }
 
-        this.addKeyListener(new GameKeyListener(this));
+        currentShape = new Shape();
+        nextShape= new Shape();
+        setNewShapeOnBoard(currentShape);
+
         this.setFocusable(true);
-        this.requestFocusInWindow();
+        this.requestFocus();
     }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
 
-        if(gameStarted)
-            fallOneLine();
+
+        for (int[] ints : coordinatesOfCurrentShape) {
+            for (int anInt : ints) System.out.print(anInt + " ");
+
+            System.out.println();
+        }
+
+        displayCurrentBoard(g);
+
+        if(gameStared) {
+            displayCurrentBoard(g);
+            if(!fallOneLine()) {
+                generateNewShape();
+                setNewShapeOnBoard(currentShape);
+            }
+        }
+    }
+
+    void displayCurrentBoard(Graphics g) {
+
+        for (int i = 4; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] != -1) {
+                    g.setColor(AllShapes.colors[board[i][j]]);
+                    g.fillRect(j * cellSize, (i - 4) * cellSize, cellSize, cellSize);
+                }
+                g.setColor(Color.GRAY);
+                g.drawRect(j * cellSize, (i - 4) * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    void setNewShapeOnBoard(Shape currentShape) {
+
+        currentX = NUMBER_OF_COLUMNS / 2 - currentShape.getCoordinates()[0].length / 2;
+
+        int k = 0;
+
+        for (int i = 0; i < currentShape.getCoordinates().length; i++)
+            for (int j = 0; j < currentShape.getCoordinates()[i].length; j++)
+                if (currentShape.getCoordinates()[i][j]) {
+                    board[currentY + i][currentX + j] = currentShape.getColor();
+                    coordinatesOfCurrentShape[k++] = new int[]{currentY + i, currentX + j};
+                }
 
     }
 
-//    @Override
-//    public void keyPressed(KeyEvent e) {
-//
-//        System.out.println("naciskam!!!!");
-//        int x = currentShape.getX();
-//        int y = currentShape.getY();
-//
-//        switch (e.getKeyCode()){
-//
-//            case KeyEvent.VK_LEFT:
-//                if(tryToMove(currentShape,0,-1)) {
-//                    currentShape.setBackground(Color.BLACK);
-//                    y--;
-//                    currentShape = board[x][y];
-//                }
-//                break;
-//            case KeyEvent.VK_RIGHT:
-//                if(tryToMove(currentShape,0,1) ) {
-//                    currentShape.setBackground(Color.BLACK);
-//                    y++;
-//                    System.out.println("bjbii");;
-//                    currentShape = board[x][y];
-//                }
-//                break;
-//            case KeyEvent.VK_DOWN:
-//                if(tryToMove(currentShape,1,0)){
-//                    currentShape.setBackground(Color.BLACK);
-//                    timer.setDelay(400);
-//                    x++;
-//                    currentShape = board[x][y];
-//                }
-//                break;
-//
-//
-//        }
-//        paintShape(currentShape);
-//    }
-//
-//    @Override
-//    public void keyReleased(KeyEvent e) {
-//        if(e.getKeyCode()==KeyEvent.VK_DOWN)
-//            timer.setDelay(900);
-//
-//    }
-//
-//    @Override
-//    public void keyTyped(KeyEvent e) { }
+    boolean fallOneLine() {
+
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
+
+            int[] coordinatesOfOnePiece = coordinatesOfCurrentShape[i];
+
+            boolean isAboveOtherPiece = false;
+            for (int j = 0; j < coordinatesOfCurrentShape.length; j++)
+                if ((coordinatesOfOnePiece[0] + 1 == coordinatesOfCurrentShape[j][0] && coordinatesOfOnePiece[1] == coordinatesOfCurrentShape[j][1]))
+                    isAboveOtherPiece = true;
+
+            if(isAboveOtherPiece)
+                continue;
+
+            if (!tryToMoveDown(coordinatesOfOnePiece[0] + 1, coordinatesOfOnePiece[1]))
+                return false;
+        }
+
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
+            board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]] = -1;
+            coordinatesOfCurrentShape[i][0] = coordinatesOfCurrentShape[i][0] + 1;
+        }
+
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
+            for (int j = 0; j < coordinatesOfCurrentShape[i].length-1; j++)
+                board[coordinatesOfCurrentShape[i][j]][coordinatesOfCurrentShape[i][j+1]]=currentShape.getColor();
+
+        return true;
+    }
 
 
-    public void paintShape(Shape shape){
-        shape.setBackground(Color.GREEN);
+
+    boolean tryToMoveDown(int newX, int newY) {
+
+        if (newX >= board.length || newY <= 0 || newY >= NUMBER_OF_COLUMNS)
+            return false;
+
+        return board[newX][newY] == -1;
+    }
+
+    boolean tryToMoveLeft(int newX, int newY) {
+        return false;
+    }
+
+    boolean tryToMoveRight(int newX, int newY){
+        return true;
+    }
+
+
+    void startGame() {
+        timer.start();
+        gameStared = true;
+    }
+
+    void generateNewShape() {
+        currentShape=nextShape;
+        nextShape = new Shape();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         repaint();
     }
-
-    void fallOneLine(){
-
-        int x = currentShape.x;
-        int y = currentShape.y;
-
-        if(tryToMove(currentShape,1,y)){
-            currentShape.setBackground(Color.BLACK);
-            x++;
-            currentShape = board[x][y];
-        }
-        paintShape(currentShape);
-
-    }
-
-    boolean tryToMove(Shape shape ,int newX, int newY) {
-       // System.out.println("check");
-
-        if(shape.getX() + newX <= NUMBER_OF_ROWS)
-            System.out.println("war 1");
-        if(shape.getY() + newY <= NUMBER_OF_COLUMNS)
-            System.out.println("war 2");
-        if(shape.getY() + newY >= 0)
-            System.out.println("war 3");
-
-        return (shape.getX() + newX <= NUMBER_OF_ROWS && shape.getY() + newY <= NUMBER_OF_COLUMNS && shape.getY() + newY >= 0);
-
-    }
-
-    void startGame(){
-        currentShape = board[0][board[0].length/2];
-        currentShape.x=0;
-        currentShape.y=board[0].length/2;
-        currentShape.setBackground(Color.GREEN);
-
-        isFalling= true;
-    }
-
 
 
 }

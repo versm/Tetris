@@ -1,20 +1,30 @@
-import javax.swing.*;
-import java.awt.*;
+public class Shape extends AllShapes{
 
-public class Shape extends JPanel {
+  //  private Color color;
+    private int color;
+    private boolean[][] coordinates;
+    //private int [][] coordinatesOnBoard;
 
-    Color color;
-    int x,y;
 
+    Shape(){
 
-    Shape(int x, int y){
-        this.x=x;
-        this.y=y;
+        int randomNumber = (int)(Math.random()*7);
+
+        color =randomNumber;
+       // color=AllShapes.colors[numberOfColor];
+        coordinates=super.coordinates[randomNumber];
+
+       // coordinatesOnBoard=new int[4][2];
     }
 
-    public int getX(){ return x; }
 
-    public int getY(){ return y; }
+    public boolean[][] getCoordinates() {
+        return coordinates;
+    }
+
+    public int getColor() {
+        return color;
+    }
 
 
 }

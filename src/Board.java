@@ -12,7 +12,7 @@ public class Board extends JPanel implements ActionListener {
     final int NUMBER_OF_ROWS = 20;
     final int cellSize = Game.height / 20;
 
-    Timer timer;
+    private Timer timer;
     boolean isFalling;
     boolean gameStared;
     boolean gamePaused;
@@ -25,10 +25,12 @@ public class Board extends JPanel implements ActionListener {
     List<Shape> allShapesOnBoard;
     int[][] coordinatesOfCurrentShape;
 
+
     public Board() {
         this.setPreferredSize(new Dimension(Game.width, Game.height));
         this.setBackground(Color.BLACK);
         this.setLayout(null);
+        this.addKeyListener(new GameKeyListener(this));
 
         board = new int[24][10];
         coordinatesOfCurrentShape = new int[4][2];
@@ -36,37 +38,25 @@ public class Board extends JPanel implements ActionListener {
 
         for (int[] ints : board) Arrays.fill(ints, -1);       //-1 means no element on this index
 
-        timer = new Timer(400, this);
-
+        timer = new Timer(600, this);
 
         currentShape = new Shape();
         nextShape= new Shape();
         setNewShapeOnBoard(currentShape);
 
+
         this.setFocusable(true);
         this.requestFocus();
     }
+
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
 
-
-        for (int[] ints : coordinatesOfCurrentShape) {
-            for (int anInt : ints) System.out.print(anInt + " ");
-
-            System.out.println();
-        }
-
         displayCurrentBoard(g);
 
-        if(gameStared) {
-            displayCurrentBoard(g);
-            if(!fallOneLine()) {
-                generateNewShape();
-                setNewShapeOnBoard(currentShape);
-            }
-        }
+        requestFocus();
     }
 
     void displayCurrentBoard(Graphics g) {
@@ -112,44 +102,113 @@ public class Board extends JPanel implements ActionListener {
             if(isAboveOtherPiece)
                 continue;
 
-            if (!tryToMoveDown(coordinatesOfOnePiece[0] + 1, coordinatesOfOnePiece[1]))
+            if (!tryToMove(coordinatesOfOnePiece[0] + 1, coordinatesOfOnePiece[1]))
                 return false;
         }
 
+        updateBoard(1,0);
+        return true;
+    }
+
+    boolean tryToMove(int newX, int newY) {
+
+        if (newX >= board.length || newY < 0 || newY >= NUMBER_OF_COLUMNS)
+            return false;
+
+        return board[newX][newY] == -1;
+    }
+
+    boolean moveLeft() {
+
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
+
+            int[] coordinatesOfOnePiece = coordinatesOfCurrentShape[i];
+            boolean otherPieceOnTheLeft=false;
+
+            for (int j = 0; j < coordinatesOfCurrentShape.length; j++)
+
+                if(coordinatesOfOnePiece[0]==coordinatesOfCurrentShape[j][0] && coordinatesOfOnePiece[1]==coordinatesOfCurrentShape[j][1]+1)
+                    otherPieceOnTheLeft=true;
+
+            if(otherPieceOnTheLeft)
+                continue;
+
+            if(!tryToMove(coordinatesOfCurrentShape[i][0],coordinatesOfCurrentShape[i][1]-1))
+                return false;
+        }
+
+        updateBoard(0,-1);
+        return true;
+    }
+
+    boolean moveRight(){
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
+
+            int[] coordinatesOfOnePiece = coordinatesOfCurrentShape[i];
+            boolean otherPieceOnTheRight=false;
+
+            for (int j = 0; j < coordinatesOfCurrentShape.length; j++)
+
+                if(coordinatesOfOnePiece[0]==coordinatesOfCurrentShape[j][0] && coordinatesOfOnePiece[1]==coordinatesOfCurrentShape[j][1]-1)
+                    otherPieceOnTheRight=true;
+
+            if(otherPieceOnTheRight)
+                continue;
+
+            if(!tryToMove(coordinatesOfCurrentShape[i][0],coordinatesOfCurrentShape[i][1]+1))
+                return false;
+        }
+
+        updateBoard(0,1);
+        return true;
+    }
+
+    void turnRight(){
+
+        int [][] tmp = new int [4][2];
+        int px = coordinatesOfCurrentShape[2][0];
+        int py = coordinatesOfCurrentShape[2][1];
+
+        for (int i = 0; i < tmp.length; i++)
+            for (int j = 0; j < tmp[i].length; j++)
+                tmp[i][j] = coordinatesOfCurrentShape[i][j];
+
+        for (int i = 0; i < tmp.length; i++) {
+            coordinatesOfCurrentShape[i][0] = tmp[i][1]+px-py-1;
+            coordinatesOfCurrentShape[i][1] = px+py-tmp[i][0];
+        }
+
+        for (int i = 0; i < tmp.length; i++)
+            board[tmp[i][0]][tmp[i][1]] = -1;
+
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
+            for (int j = 0; j < coordinatesOfCurrentShape[i].length-1; j++)
+                board[coordinatesOfCurrentShape[i][j]][coordinatesOfCurrentShape[i][j+1]]=currentShape.getColor();
+
+
+    }
+
+    void updateBoard(int newX, int newY){
+
         for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
             board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]] = -1;
-            coordinatesOfCurrentShape[i][0] = coordinatesOfCurrentShape[i][0] + 1;
+            coordinatesOfCurrentShape[i][0] = coordinatesOfCurrentShape[i][0] + newX;
+            coordinatesOfCurrentShape[i][1] = coordinatesOfCurrentShape[i][1] + newY;
         }
 
         for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
             for (int j = 0; j < coordinatesOfCurrentShape[i].length-1; j++)
                 board[coordinatesOfCurrentShape[i][j]][coordinatesOfCurrentShape[i][j+1]]=currentShape.getColor();
 
-        return true;
     }
-
-
-
-    boolean tryToMoveDown(int newX, int newY) {
-
-        if (newX >= board.length || newY <= 0 || newY >= NUMBER_OF_COLUMNS)
-            return false;
-
-        return board[newX][newY] == -1;
-    }
-
-    boolean tryToMoveLeft(int newX, int newY) {
-        return false;
-    }
-
-    boolean tryToMoveRight(int newX, int newY){
-        return true;
-    }
-
 
     void startGame() {
         timer.start();
         gameStared = true;
+    }
+
+    void pauseGame(){
+        timer.stop();
     }
 
     void generateNewShape() {
@@ -157,8 +216,19 @@ public class Board extends JPanel implements ActionListener {
         nextShape = new Shape();
     }
 
+    void setTimer(int delay){
+        timer.setDelay(delay);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
+
+        if(gameStared) {
+            if(!fallOneLine()) {
+                generateNewShape();
+                setNewShapeOnBoard(currentShape);
+            }
+        }
         repaint();
     }
 

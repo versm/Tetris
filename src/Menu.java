@@ -20,6 +20,13 @@ public class Menu extends JPanel {
         start.addActionListener(e -> board.startGame());
         this.add(start);
 
+
+        JButton pause = new JButton("PAUSE");
+        pause.setBounds(20,280,100,20);
+
+        pause.addActionListener(e -> board.pauseGame());
+        this.add(pause);
+
         this.setFocusable(true);
         this.requestFocus();
     }

@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.text.spi.BreakIteratorProvider;
 
 public class GameKeyListener implements KeyListener {
 
@@ -15,15 +16,19 @@ public class GameKeyListener implements KeyListener {
         switch (e.getKeyCode()){
 
             case KeyEvent.VK_LEFT:
-
+                board.moveLeft();
+                board.repaint();
                 break;
             case KeyEvent.VK_RIGHT:
-
+                board.moveRight();
+                  board.repaint();
                 break;
             case KeyEvent.VK_DOWN:
-
+                board.setTimer(50);
                 break;
-
+            case KeyEvent.VK_UP:
+                board.turnRight();
+                break;
 
         }
     }
@@ -31,7 +36,7 @@ public class GameKeyListener implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         if(e.getKeyCode()==KeyEvent.VK_DOWN)
-            board.timer.setDelay(900);
+            board.setTimer(600);
 
     }
 

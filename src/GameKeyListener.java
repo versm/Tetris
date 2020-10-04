@@ -13,6 +13,9 @@ public class GameKeyListener implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
 
+        if(!board.gameStared)
+            return;
+
         switch (e.getKeyCode()){
 
             case KeyEvent.VK_LEFT:
@@ -35,6 +38,10 @@ public class GameKeyListener implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+
+        if(!board.gameStared)
+            return;
+
         if(e.getKeyCode()==KeyEvent.VK_DOWN)
             board.setTimer(600);
 

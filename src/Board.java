@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,17 +14,15 @@ public class Board extends JPanel implements ActionListener {
     final int cellSize = Game.height / 20;
 
     private Timer timer;
-    boolean isFalling;
     boolean gameStared;
-    boolean gamePaused;
 
     int[][] board;
     int currentY;     // Coordinates on board from which new elements begin to fall
     int currentX;       // Value of X depends on shape's width
     Shape currentShape;
     Shape nextShape;
-    List<Shape> allShapesOnBoard;
     int[][] coordinatesOfCurrentShape;
+    int removedLines;
 
 
     public Board() {
@@ -34,7 +33,7 @@ public class Board extends JPanel implements ActionListener {
 
         board = new int[24][10];
         coordinatesOfCurrentShape = new int[4][2];
-        allShapesOnBoard = new ArrayList<>();
+        removedLines=0;
 
         for (int[] ints : board) Arrays.fill(ints, -1);       //-1 means no element on this index
 
@@ -85,28 +84,17 @@ public class Board extends JPanel implements ActionListener {
 
     boolean fallOneLine() {
 
-        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
-
-            int[] coordinatesOfOnePiece = coordinatesOfCurrentShape[i];
-
-            boolean isAboveOtherPiece = false;
-            for (int j = 0; j < coordinatesOfCurrentShape.length; j++)
-                if ((coordinatesOfOnePiece[0] + 1 == coordinatesOfCurrentShape[j][0] && coordinatesOfOnePiece[1] == coordinatesOfCurrentShape[j][1]))
-                    isAboveOtherPiece = true;
-
-            if(isAboveOtherPiece)
-                continue;
-
-            if (!tryToMove(coordinatesOfOnePiece[0] + 1, coordinatesOfOnePiece[1]))
-                return false;
+        if(tryToMove(1,0)) {
+            currentX++;
+            updateBoard(1, 0);
+            return true;
         }
 
-        currentX++;
-        updateBoard(1,0);
-        return true;
+        setShapeOnBoard(currentShape);
+        return false;
     }
 
-    boolean tryToMove(int newX, int newY) {
+    boolean checkNextPositionOfShape(int newX, int newY) {
 
         if (newX >= board.length || newY < 0 || newY >= NUMBER_OF_COLUMNS)
             return false;
@@ -116,7 +104,7 @@ public class Board extends JPanel implements ActionListener {
 
     void moveLeft() {
 
-        if(tryToMoveLeftOrRight(-1)){
+        if(tryToMove(0,-1)){
             currentY--;
             updateBoard(0,-1);
         }else
@@ -126,22 +114,22 @@ public class Board extends JPanel implements ActionListener {
 
     void moveRight(){
 
-        if(tryToMoveLeftOrRight(1)){
+        if(tryToMove(0,1)){
             currentY++;
             updateBoard(0,1);
         }else
             setShapeOnBoard(currentShape);
     }
 
-    boolean tryToMoveLeftOrRight(int newY){
+    boolean tryToMove(int newX, int newY){
 
-        deleteShape(coordinatesOfCurrentShape);
+        deleteShape(coordinatesOfCurrentShape);     //removing current shape from board to check if it can move left, right or down
 
         for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
-            if(!tryToMove(coordinatesOfCurrentShape[i][0],coordinatesOfCurrentShape[i][1]+newY))
+            if(!checkNextPositionOfShape(coordinatesOfCurrentShape[i][0]+newX,coordinatesOfCurrentShape[i][1]+newY))
                 return false;
 
-            return true;
+        return true;
     }
 
     void rotateRight(){
@@ -166,9 +154,8 @@ public class Board extends JPanel implements ActionListener {
             int x= newCoordinates[i][0];
             int y= newCoordinates[i][1];
 
-            if(!tryToMove(currentX+y,currentY+x)){
+            if(!checkNextPositionOfShape(currentX+y,currentY+x))
                 return false;
-            }
         }
 
         return true;
@@ -184,6 +171,26 @@ public class Board extends JPanel implements ActionListener {
             board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]]=currentShape.getColor();
         }
 
+    }
+
+    void removeFullLines(){
+
+        boolean isFull= true;
+
+        for (int i = board.length-1; i >= 4; i--) {
+            isFull=true;
+            for (int j = 0; j < board[i].length; j++) {
+                if(board[i][j] == -1)
+                    isFull=false;
+            }
+            if(isFull) {
+                for (int k = i - 1; k > 4; k--)
+                    board[k + 1] = board[k].clone();
+
+                removedLines++;
+            }
+        }
+        System.out.println(removedLines);
     }
 
     void startGame() {
@@ -234,11 +241,16 @@ public class Board extends JPanel implements ActionListener {
         timer.setDelay(delay);
     }
 
+    int getCellSize(){
+        return cellSize;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
 
         if(gameStared) {
             if(!fallOneLine()) {
+                removeFullLines();
                 generateNewShape();
                 currentX=2;
                 currentY=4;

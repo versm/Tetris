@@ -27,7 +27,7 @@ public class GameKeyListener implements KeyListener {
                 board.setTimer(50);
                 break;
             case KeyEvent.VK_UP:
-                board.turnRight();
+                board.rotateRight();
                 break;
 
         }

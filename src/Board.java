@@ -18,7 +18,7 @@ public class Board extends JPanel implements ActionListener {
     boolean gamePaused;
 
     int[][] board;
-    int currentY = 0;     // Coordinates on board from which new elements begin to fall
+    int currentY;     // Coordinates on board from which new elements begin to fall
     int currentX;       // Value of X depends on shape's width
     Shape currentShape;
     Shape nextShape;
@@ -39,11 +39,6 @@ public class Board extends JPanel implements ActionListener {
         for (int[] ints : board) Arrays.fill(ints, -1);       //-1 means no element on this index
 
         timer = new Timer(600, this);
-
-        currentShape = new Shape();
-        nextShape= new Shape();
-        setNewShapeOnBoard(currentShape);
-
 
         this.setFocusable(true);
         this.requestFocus();
@@ -73,18 +68,18 @@ public class Board extends JPanel implements ActionListener {
         }
     }
 
-    void setNewShapeOnBoard(Shape currentShape) {
-
-        currentX = NUMBER_OF_COLUMNS / 2 - currentShape.getCoordinates()[0].length / 2;
+    void setShapeOnBoard(Shape currentShape) {
 
         int k = 0;
 
-        for (int i = 0; i < currentShape.getCoordinates().length; i++)
-            for (int j = 0; j < currentShape.getCoordinates()[i].length; j++)
-                if (currentShape.getCoordinates()[i][j]) {
-                    board[currentY + i][currentX + j] = currentShape.getColor();
-                    coordinatesOfCurrentShape[k++] = new int[]{currentY + i, currentX + j};
-                }
+        for (int i = 0; i < currentShape.getCoordinates().length; i++){
+
+                int x= currentShape.getCoordinates()[i][0];
+                int y= currentShape.getCoordinates()[i][1];
+
+                board[currentX+y][currentY+x]=currentShape.getColor();
+                coordinatesOfCurrentShape[k++] = new int[]{currentX + y, currentY + x};
+        }
 
     }
 
@@ -106,6 +101,7 @@ public class Board extends JPanel implements ActionListener {
                 return false;
         }
 
+        currentX++;
         updateBoard(1,0);
         return true;
     }
@@ -118,102 +114,120 @@ public class Board extends JPanel implements ActionListener {
         return board[newX][newY] == -1;
     }
 
-    boolean moveLeft() {
+    void moveLeft() {
 
-        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
+        if(tryToMoveLeftOrRight(-1)){
+            currentY--;
+            updateBoard(0,-1);
+        }else
+            setShapeOnBoard(currentShape);
 
-            int[] coordinatesOfOnePiece = coordinatesOfCurrentShape[i];
-            boolean otherPieceOnTheLeft=false;
+    }
 
-            for (int j = 0; j < coordinatesOfCurrentShape.length; j++)
+    void moveRight(){
 
-                if(coordinatesOfOnePiece[0]==coordinatesOfCurrentShape[j][0] && coordinatesOfOnePiece[1]==coordinatesOfCurrentShape[j][1]+1)
-                    otherPieceOnTheLeft=true;
+        if(tryToMoveLeftOrRight(1)){
+            currentY++;
+            updateBoard(0,1);
+        }else
+            setShapeOnBoard(currentShape);
+    }
 
-            if(otherPieceOnTheLeft)
-                continue;
+    boolean tryToMoveLeftOrRight(int newY){
 
-            if(!tryToMove(coordinatesOfCurrentShape[i][0],coordinatesOfCurrentShape[i][1]-1))
+        deleteShape(coordinatesOfCurrentShape);
+
+        for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
+            if(!tryToMove(coordinatesOfCurrentShape[i][0],coordinatesOfCurrentShape[i][1]+newY))
                 return false;
+
+            return true;
+    }
+
+    void rotateRight(){
+
+        if(currentShape.getColor()==3)      //checking if current figure isn't square shape
+            return;
+
+        int [][] newCoordinates= currentShape.rotateRight();
+
+        if(tryToRotate(newCoordinates))
+            currentShape.setCoordinates(newCoordinates);
+        
+        setShapeOnBoard(currentShape);
+        
+    }
+
+    boolean tryToRotate(int [][] newCoordinates){
+
+        deleteShape(coordinatesOfCurrentShape);
+        for (int i = 0; i < newCoordinates.length; i++){
+
+            int x= newCoordinates[i][0];
+            int y= newCoordinates[i][1];
+
+            if(!tryToMove(currentX+y,currentY+x)){
+                return false;
+            }
         }
 
-        updateBoard(0,-1);
         return true;
     }
 
-    boolean moveRight(){
-        for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
+    void updateBoard(int addedX, int addedY){
 
-            int[] coordinatesOfOnePiece = coordinatesOfCurrentShape[i];
-            boolean otherPieceOnTheRight=false;
-
-            for (int j = 0; j < coordinatesOfCurrentShape.length; j++)
-
-                if(coordinatesOfOnePiece[0]==coordinatesOfCurrentShape[j][0] && coordinatesOfOnePiece[1]==coordinatesOfCurrentShape[j][1]-1)
-                    otherPieceOnTheRight=true;
-
-            if(otherPieceOnTheRight)
-                continue;
-
-            if(!tryToMove(coordinatesOfCurrentShape[i][0],coordinatesOfCurrentShape[i][1]+1))
-                return false;
-        }
-
-        updateBoard(0,1);
-        return true;
-    }
-
-    void turnRight(){
-
-        int [][] tmp = new int [4][2];
-        int px = coordinatesOfCurrentShape[2][0];
-        int py = coordinatesOfCurrentShape[2][1];
-
-        for (int i = 0; i < tmp.length; i++)
-            for (int j = 0; j < tmp[i].length; j++)
-                tmp[i][j] = coordinatesOfCurrentShape[i][j];
-
-        for (int i = 0; i < tmp.length; i++) {
-            coordinatesOfCurrentShape[i][0] = tmp[i][1]+px-py-1;
-            coordinatesOfCurrentShape[i][1] = px+py-tmp[i][0];
-        }
-
-        for (int i = 0; i < tmp.length; i++)
-            board[tmp[i][0]][tmp[i][1]] = -1;
-
-        for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
-            for (int j = 0; j < coordinatesOfCurrentShape[i].length-1; j++)
-                board[coordinatesOfCurrentShape[i][j]][coordinatesOfCurrentShape[i][j+1]]=currentShape.getColor();
-
-
-    }
-
-    void updateBoard(int newX, int newY){
+        deleteShape(coordinatesOfCurrentShape);
 
         for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
-            board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]] = -1;
-            coordinatesOfCurrentShape[i][0] = coordinatesOfCurrentShape[i][0] + newX;
-            coordinatesOfCurrentShape[i][1] = coordinatesOfCurrentShape[i][1] + newY;
+            coordinatesOfCurrentShape[i][0] = coordinatesOfCurrentShape[i][0] + addedX;
+            coordinatesOfCurrentShape[i][1] = coordinatesOfCurrentShape[i][1] + addedY;
+            board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]]=currentShape.getColor();
         }
-
-        for (int i = 0; i < coordinatesOfCurrentShape.length; i++)
-            for (int j = 0; j < coordinatesOfCurrentShape[i].length-1; j++)
-                board[coordinatesOfCurrentShape[i][j]][coordinatesOfCurrentShape[i][j+1]]=currentShape.getColor();
 
     }
 
     void startGame() {
-        timer.start();
-        gameStared = true;
+
+        if(gameStared)
+            timer.start();
+
+        else {
+            currentY = 4;
+            currentX = 2;
+            timer.start();
+            gameStared = true;
+            currentShape = new Shape();
+            nextShape = new Shape();
+            setShapeOnBoard(currentShape);
+        }
     }
 
     void pauseGame(){
         timer.stop();
     }
 
+    void finishGame(){
+        timer.stop();
+        clearBoard();
+        repaint();
+        gameStared=false;
+    }
+
     void generateNewShape() {
         currentShape=nextShape;
         nextShape = new Shape();
+    }
+
+    void deleteShape(int [][] coordinates){
+
+        for (int i = 0; i < coordinates.length; i++)
+            board[coordinates[i][0]][coordinates[i][1]] = -1;
+
+    }
+
+    void clearBoard(){
+        for (int[] ints : board)
+            Arrays.fill(ints, -1);
     }
 
     void setTimer(int delay){
@@ -226,7 +240,9 @@ public class Board extends JPanel implements ActionListener {
         if(gameStared) {
             if(!fallOneLine()) {
                 generateNewShape();
-                setNewShapeOnBoard(currentShape);
+                currentX=2;
+                currentY=4;
+                setShapeOnBoard(currentShape);
             }
         }
         repaint();

@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 
 public class Menu extends JPanel {
 
@@ -26,6 +25,12 @@ public class Menu extends JPanel {
 
         pause.addActionListener(e -> board.pauseGame());
         this.add(pause);
+
+        JButton finish = new JButton("FINISH");
+        finish.setBounds(20,380,100,20);
+
+        finish.addActionListener(e -> board.finishGame());
+        this.add(finish);
 
         this.setFocusable(true);
         this.requestFocus();

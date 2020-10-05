@@ -2,10 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Board extends JPanel implements ActionListener {
 
@@ -24,6 +21,7 @@ public class Board extends JPanel implements ActionListener {
     int[][] coordinatesOfCurrentShape;
     int removedLines;
 
+    Menu menu;
 
     public Board() {
         this.setPreferredSize(new Dimension(Game.width, Game.height));
@@ -76,10 +74,9 @@ public class Board extends JPanel implements ActionListener {
                 int x= currentShape.getCoordinates()[i][0];
                 int y= currentShape.getCoordinates()[i][1];
 
-                board[currentX+y][currentY+x]=currentShape.getColor();
+                board[currentX+y][currentY+x]=currentShape.getNumberOfColor();
                 coordinatesOfCurrentShape[k++] = new int[]{currentX + y, currentY + x};
         }
-
     }
 
     boolean fallOneLine() {
@@ -121,6 +118,20 @@ public class Board extends JPanel implements ActionListener {
             setShapeOnBoard(currentShape);
     }
 
+    void rotateRight(){
+
+        if(currentShape.getNumberOfColor()==3)      //checking if current figure isn't square shape
+            return;
+
+        int [][] newCoordinates= currentShape.rotateRight();
+
+        if(tryToRotate(newCoordinates))
+            currentShape.setCoordinates(newCoordinates);
+
+        setShapeOnBoard(currentShape);
+
+    }
+
     boolean tryToMove(int newX, int newY){
 
         deleteShape(coordinatesOfCurrentShape);     //removing current shape from board to check if it can move left, right or down
@@ -130,20 +141,6 @@ public class Board extends JPanel implements ActionListener {
                 return false;
 
         return true;
-    }
-
-    void rotateRight(){
-
-        if(currentShape.getColor()==3)      //checking if current figure isn't square shape
-            return;
-
-        int [][] newCoordinates= currentShape.rotateRight();
-
-        if(tryToRotate(newCoordinates))
-            currentShape.setCoordinates(newCoordinates);
-        
-        setShapeOnBoard(currentShape);
-        
     }
 
     boolean tryToRotate(int [][] newCoordinates){
@@ -168,7 +165,7 @@ public class Board extends JPanel implements ActionListener {
         for (int i = 0; i < coordinatesOfCurrentShape.length; i++) {
             coordinatesOfCurrentShape[i][0] = coordinatesOfCurrentShape[i][0] + addedX;
             coordinatesOfCurrentShape[i][1] = coordinatesOfCurrentShape[i][1] + addedY;
-            board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]]=currentShape.getColor();
+            board[coordinatesOfCurrentShape[i][0]][coordinatesOfCurrentShape[i][1]]=currentShape.getNumberOfColor();
         }
 
     }
@@ -205,6 +202,7 @@ public class Board extends JPanel implements ActionListener {
             gameStared = true;
             currentShape = new Shape();
             nextShape = new Shape();
+            menu.repaint();
             setShapeOnBoard(currentShape);
         }
     }
@@ -223,6 +221,8 @@ public class Board extends JPanel implements ActionListener {
     void generateNewShape() {
         currentShape=nextShape;
         nextShape = new Shape();
+
+        menu.repaint();
     }
 
     void deleteShape(int [][] coordinates){
@@ -237,6 +237,28 @@ public class Board extends JPanel implements ActionListener {
             Arrays.fill(ints, -1);
     }
 
+    boolean isGameOver(){
+        for (int i = 0; i < NUMBER_OF_COLUMNS; i++)
+            if(board[3][i] != -1)
+                return true;
+
+            return false;
+    }
+
+    void gameOver(){
+        timer.stop();
+        clearBoard();
+
+        JLabel gameOver = new JLabel("GAME OVER");
+        gameOver.setBounds(100,300,200,200);
+        this.add(gameOver);
+
+    }
+
+    Shape getNextShape(){
+        return nextShape;
+    }
+
     void setTimer(int delay){
         timer.setDelay(delay);
     }
@@ -245,11 +267,18 @@ public class Board extends JPanel implements ActionListener {
         return cellSize;
     }
 
+    void setMenu(Menu menu){
+        this.menu=menu;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
 
         if(gameStared) {
             if(!fallOneLine()) {
+                if(isGameOver())
+                    gameOver();
+
                 removeFullLines();
                 generateNewShape();
                 currentX=2;

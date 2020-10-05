@@ -11,8 +11,9 @@ public class Game{
     Menu menu;
 
     public Game() {
-        this.board=new Board();
-        this.menu= new Menu(board);
+        board=new Board();
+        menu= new Menu(board);
+        board.setMenu(menu);
         jFrame = new JFrame("Tetris");
         jFrame.add(board);
         jFrame.add(menu);

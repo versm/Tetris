@@ -1,13 +1,17 @@
-public class Shape extends AllShapes{
+import java.awt.*;
 
-    private final int color;
+public class Shape {
+
+    private final int numberOfColor;
  //   private boolean[][] coordinates;
+    private final Color color;
     private int [][] coordinates;
 
     Shape(){
         int randomNumber = (int)(Math.random()*7);
-        color =randomNumber;
-        coordinates=super.coordinates[randomNumber];
+        numberOfColor =randomNumber;
+        color= AllShapes.colors[randomNumber];
+        coordinates= AllShapes.coordinates[randomNumber];
     }
 
     public int[][] getCoordinates() {
@@ -18,7 +22,11 @@ public class Shape extends AllShapes{
         this.coordinates=coordinates;
     }
 
-    public int getColor() {
+    public int getNumberOfColor() {
+        return numberOfColor;
+    }
+
+    public Color getColor(){
         return color;
     }
 

@@ -43,7 +43,7 @@ public class GameKeyListener implements KeyListener {
             return;
 
         if(e.getKeyCode()==KeyEvent.VK_DOWN)
-            board.setTimer(600);
+            board.setTimer(board.getCycleDuration());
 
     }
 

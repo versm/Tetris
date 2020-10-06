@@ -11,17 +11,21 @@ public class Board extends JPanel implements ActionListener {
     final int cellSize = Game.height / 20;
 
     private Timer timer;
+    private int cycleDuration;
     boolean gameStared;
 
     int[][] board;
-    int currentY;     // Coordinates on board from which new elements begin to fall
-    int currentX;       // Value of X depends on shape's width
+    int currentY, currentX;     // Describes "center" piece (the point around which it rotates)
     Shape currentShape;
     Shape nextShape;
     int[][] coordinatesOfCurrentShape;
-    int removedLines;
+    int allRemovedLines;
+    int linesRemovedInThisLevel;
+    int level;
+    int points;
 
     Menu menu;
+    ScoringSystem scoringSystem;
 
     public Board() {
         this.setPreferredSize(new Dimension(Game.width, Game.height));
@@ -29,13 +33,15 @@ public class Board extends JPanel implements ActionListener {
         this.setLayout(null);
         this.addKeyListener(new GameKeyListener(this));
 
+        cycleDuration=600;
+        timer = new Timer(cycleDuration, this);
+        scoringSystem = new ScoringSystem();
         board = new int[24][10];
         coordinatesOfCurrentShape = new int[4][2];
-        removedLines=0;
+        allRemovedLines =0;
+        linesRemovedInThisLevel=0;
 
         for (int[] ints : board) Arrays.fill(ints, -1);       //-1 means no element on this index
-
-        timer = new Timer(600, this);
 
         this.setFocusable(true);
         this.requestFocus();
@@ -59,7 +65,7 @@ public class Board extends JPanel implements ActionListener {
                     g.setColor(AllShapes.colors[board[i][j]]);
                     g.fillRect(j * cellSize, (i - 4) * cellSize, cellSize, cellSize);
                 }
-                g.setColor(Color.GRAY);
+                g.setColor(new Color(77, 77, 77));
                 g.drawRect(j * cellSize, (i - 4) * cellSize, cellSize, cellSize);
             }
         }
@@ -172,7 +178,8 @@ public class Board extends JPanel implements ActionListener {
 
     void removeFullLines(){
 
-        boolean isFull= true;
+        boolean isFull;
+        int linesRemovedAtOnce=0;
 
         for (int i = board.length-1; i >= 4; i--) {
             isFull=true;
@@ -184,10 +191,29 @@ public class Board extends JPanel implements ActionListener {
                 for (int k = i - 1; k > 4; k--)
                     board[k + 1] = board[k].clone();
 
-                removedLines++;
+                linesRemovedAtOnce++;
             }
+
         }
-        System.out.println(removedLines);
+        linesRemovedInThisLevel+=linesRemovedAtOnce;
+        allRemovedLines +=linesRemovedAtOnce;
+        points+=scoringSystem.addPoints(level,linesRemovedAtOnce);
+      //  level += allRemovedLines%10==0 && allRemovedLines != 0 ? 1 : 0;
+
+    }
+
+    void updateStatistics(){
+        menu.setNumberOfRemovedLines(allRemovedLines);
+        menu.setPoints(points);
+        menu.setLevel(level);
+    }
+
+    void updateLevelAndCycleDuration(){
+        if(linesRemovedInThisLevel%10==0 && linesRemovedInThisLevel != 0){
+            level++;
+            linesRemovedInThisLevel=0;
+            cycleDuration-= cycleDuration >= 60 ? 100 : 0;
+        }
     }
 
     void startGame() {
@@ -229,7 +255,6 @@ public class Board extends JPanel implements ActionListener {
 
         for (int i = 0; i < coordinates.length; i++)
             board[coordinates[i][0]][coordinates[i][1]] = -1;
-
     }
 
     void clearBoard(){
@@ -267,6 +292,14 @@ public class Board extends JPanel implements ActionListener {
         return cellSize;
     }
 
+    int getCycleDuration(){
+        return cycleDuration;
+    }
+
+    void setCycleDuration(int cycleDuration){
+        this.cycleDuration=cycleDuration;
+    }
+
     void setMenu(Menu menu){
         this.menu=menu;
     }
@@ -280,6 +313,8 @@ public class Board extends JPanel implements ActionListener {
                     gameOver();
 
                 removeFullLines();
+                updateLevelAndCycleDuration();
+                updateStatistics();
                 generateNewShape();
                 currentX=2;
                 currentY=4;

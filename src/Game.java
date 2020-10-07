@@ -8,15 +8,15 @@ public class Game{
     static final int width = height/2;
     JFrame jFrame;
     Board board;
-    Menu menu;
+    SidePanel sidePanel;
 
     public Game() {
         board=new Board();
-        menu= new Menu(board);
-        board.setMenu(menu);
+        sidePanel = new SidePanel(board);
+        board.setSidePanel(sidePanel);
         jFrame = new JFrame("Tetris");
         jFrame.add(board);
-        jFrame.add(menu);
+        jFrame.add(sidePanel);
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         jFrame.setLayout(new FlowLayout());
 

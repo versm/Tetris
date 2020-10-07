@@ -1,7 +1,5 @@
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.text.spi.BreakIteratorProvider;
 
 public class GameKeyListener implements KeyListener {
 

@@ -3,7 +3,6 @@ import java.awt.*;
 public class Shape {
 
     private final int numberOfColor;
- //   private boolean[][] coordinates;
     private final Color color;
     private int [][] coordinates;
 
@@ -44,8 +43,4 @@ public class Shape {
         }
         return tmp;
     }
-
-
-
-
 }

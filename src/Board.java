@@ -7,12 +7,13 @@ import java.util.Arrays;
 public class Board extends JPanel implements ActionListener {
 
     final int NUMBER_OF_COLUMNS = 10;
-    final int NUMBER_OF_ROWS = 20;
     final int cellSize = Game.height / 20;
 
     private Timer timer;
     private int cycleDuration;
     boolean gameStared;
+    boolean isPaused;
+    boolean isGameOver;
 
     int[][] board;
     int currentY, currentX;     // Describes "center" piece (the point around which it rotates)
@@ -24,7 +25,7 @@ public class Board extends JPanel implements ActionListener {
     int level;
     int points;
 
-    Menu menu;
+    SidePanel sidePanel;
     ScoringSystem scoringSystem;
 
     public Board() {
@@ -53,6 +54,17 @@ public class Board extends JPanel implements ActionListener {
         super.paint(g);
 
         displayCurrentBoard(g);
+
+        if(isPaused){
+            g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 40));
+            g.setColor(Color.WHITE);
+            g.drawString("PAUSED",85,this.getHeight()/2);
+        }else if(isGameOver){
+            g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 40));
+            g.setColor(Color.WHITE);
+            g.drawString("GAME OVER",50,this.getHeight()/2);
+        }
+
 
         requestFocus();
     }
@@ -181,14 +193,14 @@ public class Board extends JPanel implements ActionListener {
         boolean isFull;
         int linesRemovedAtOnce=0;
 
-        for (int i = board.length-1; i >= 4; i--) {
+        for (int i = 4; i < board.length; i++) {
             isFull=true;
             for (int j = 0; j < board[i].length; j++) {
                 if(board[i][j] == -1)
                     isFull=false;
             }
             if(isFull) {
-                for (int k = i - 1; k > 4; k--)
+                for (int k = i - 1; k >= 3; k--)
                     board[k + 1] = board[k].clone();
 
                 linesRemovedAtOnce++;
@@ -198,14 +210,13 @@ public class Board extends JPanel implements ActionListener {
         linesRemovedInThisLevel+=linesRemovedAtOnce;
         allRemovedLines +=linesRemovedAtOnce;
         points+=scoringSystem.addPoints(level,linesRemovedAtOnce);
-      //  level += allRemovedLines%10==0 && allRemovedLines != 0 ? 1 : 0;
 
     }
 
     void updateStatistics(){
-        menu.setNumberOfRemovedLines(allRemovedLines);
-        menu.setPoints(points);
-        menu.setLevel(level);
+        sidePanel.setNumberOfRemovedLines(allRemovedLines);
+        sidePanel.setPoints(points);
+        sidePanel.setLevel(level);
     }
 
     void updateLevelAndCycleDuration(){
@@ -216,39 +227,16 @@ public class Board extends JPanel implements ActionListener {
         }
     }
 
-    void startGame() {
-
-        if(gameStared)
-            timer.start();
-
-        else {
-            currentY = 4;
-            currentX = 2;
-            timer.start();
-            gameStared = true;
-            currentShape = new Shape();
-            nextShape = new Shape();
-            menu.repaint();
-            setShapeOnBoard(currentShape);
-        }
-    }
-
-    void pauseGame(){
-        timer.stop();
-    }
-
-    void finishGame(){
-        timer.stop();
-        clearBoard();
-        repaint();
-        gameStared=false;
-    }
-
     void generateNewShape() {
         currentShape=nextShape;
         nextShape = new Shape();
 
-        menu.repaint();
+        sidePanel.repaint();
+    }
+
+    void clearBoard(){
+        for (int[] ints : board)
+            Arrays.fill(ints, -1);
     }
 
     void deleteShape(int [][] coordinates){
@@ -257,9 +245,28 @@ public class Board extends JPanel implements ActionListener {
             board[coordinates[i][0]][coordinates[i][1]] = -1;
     }
 
-    void clearBoard(){
-        for (int[] ints : board)
-            Arrays.fill(ints, -1);
+    void startGame() {
+
+        if(gameStared) {
+            timer.start();
+            isPaused=false;
+        } else {
+            restartGame();
+            currentY = 4;
+            currentX = 2;
+            timer.start();
+            gameStared = true;
+            currentShape = new Shape();
+            nextShape = new Shape();
+            sidePanel.repaint();
+            setShapeOnBoard(currentShape);
+        }
+    }
+
+    void pauseGame(){
+        isPaused=true;
+        repaint();
+        timer.stop();
     }
 
     boolean isGameOver(){
@@ -267,41 +274,33 @@ public class Board extends JPanel implements ActionListener {
             if(board[3][i] != -1)
                 return true;
 
-            return false;
+        return false;
     }
 
     void gameOver(){
+        isGameOver=true;
+        repaint();
         timer.stop();
+        gameStared=false;
+    }
+
+    void restartGame(){
+        isGameOver=false;
         clearBoard();
-
-        JLabel gameOver = new JLabel("GAME OVER");
-        gameOver.setBounds(100,300,200,200);
-        this.add(gameOver);
-
+        repaint();
+        timer.setDelay(600);
     }
 
-    Shape getNextShape(){
-        return nextShape;
-    }
+    Shape getNextShape(){ return nextShape; }
 
-    void setTimer(int delay){
-        timer.setDelay(delay);
-    }
+    void setTimer(int delay){ timer.setDelay(delay); }
 
-    int getCellSize(){
-        return cellSize;
-    }
+    int getCellSize(){ return cellSize; }
 
-    int getCycleDuration(){
-        return cycleDuration;
-    }
+    int getCycleDuration(){ return cycleDuration; }
 
-    void setCycleDuration(int cycleDuration){
-        this.cycleDuration=cycleDuration;
-    }
-
-    void setMenu(Menu menu){
-        this.menu=menu;
+    void setSidePanel(SidePanel sidePanel){
+        this.sidePanel = sidePanel;
     }
 
     @Override
@@ -323,6 +322,4 @@ public class Board extends JPanel implements ActionListener {
         }
         repaint();
     }
-
-
 }

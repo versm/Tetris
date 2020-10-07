@@ -3,14 +3,14 @@ import java.awt.*;
 import java.util.Arrays;
 
 
-public class Menu extends JPanel {
+public class SidePanel extends JPanel {
 
     Board board;
     JLabel level;
     JLabel removedLines;
     JLabel points;
 
-    public Menu(Board board) {
+    public SidePanel(Board board) {
 
         this.board=board;
 
@@ -37,7 +37,7 @@ public class Menu extends JPanel {
         JButton finish = new JButton("FINISH");
         finish.setBounds(20,270,100,20);
         finish.setBackground(new Color(176,178,166));
-        finish.addActionListener(e -> board.finishGame());
+        finish.addActionListener(e -> board.gameOver());
 
         JLabel levelLabel = new JLabel("LEVEL");
         levelLabel.setBounds(10,320,70,20);

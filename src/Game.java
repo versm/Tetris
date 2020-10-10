@@ -3,12 +3,11 @@ import java.awt.*;
 
 public class Game{
 
-  //  static final int height =  Toolkit.getDefaultToolkit().getScreenSize().height - 100;
     static final int height =  600;
     static final int width = height/2;
-    JFrame jFrame;
-    Board board;
-    SidePanel sidePanel;
+    private JFrame jFrame;
+    private Board board;
+    private SidePanel sidePanel;
 
     public Game() {
         board=new Board();
@@ -17,6 +16,7 @@ public class Game{
         jFrame = new JFrame("Tetris");
         jFrame.add(board);
         jFrame.add(sidePanel);
+        jFrame.setForeground(Color.RED);
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         jFrame.setLayout(new FlowLayout());
 
@@ -26,12 +26,9 @@ public class Game{
         jFrame.pack();
     }
 
-
     public static void main(String[] args) {
-
         SwingUtilities.invokeLater(()->{
             new Game();
         });
     }
-
 }

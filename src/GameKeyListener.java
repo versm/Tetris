@@ -3,7 +3,7 @@ import java.awt.event.KeyListener;
 
 public class GameKeyListener implements KeyListener {
 
-    Board board;
+    private Board board;
 
     GameKeyListener(Board board){
         this.board=board;
@@ -11,7 +11,7 @@ public class GameKeyListener implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
 
-        if(!board.gameStared)
+        if(!board.isGameStarted() || board.isGamePaused())
             return;
 
         switch (e.getKeyCode()){
@@ -30,19 +30,17 @@ public class GameKeyListener implements KeyListener {
             case KeyEvent.VK_UP:
                 board.rotateRight();
                 break;
-
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
 
-        if(!board.gameStared)
+        if(!board.isGameStarted())
             return;
 
         if(e.getKeyCode()==KeyEvent.VK_DOWN)
-            board.setTimer(board.getCycleDuration());
-
+            board.setTimer(board.getPeriodInterval());
     }
 
     @Override

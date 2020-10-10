@@ -6,27 +6,26 @@ import java.util.Arrays;
 
 public class Board extends JPanel implements ActionListener {
 
-    final int NUMBER_OF_COLUMNS = 10;
     final int cellSize = Game.height / 20;
 
     private Timer timer;
-    private int cycleDuration;
-    boolean gameStared;
-    boolean isPaused;
-    boolean isGameOver;
+    private int periodInterval;
+    private boolean gameStared;
+    private boolean isPaused;
+    private boolean isGameOver;
 
-    int[][] board;
-    int currentY, currentX;     // Describes "center" piece (the point around which it rotates)
-    Shape currentShape;
-    Shape nextShape;
-    int[][] coordinatesOfCurrentShape;
-    int allRemovedLines;
-    int linesRemovedInThisLevel;
-    int level;
-    int points;
+    private int[][] board;
+    private int currentY, currentX;     // Describes "center" piece (the point around which it rotates)
+    private Shape currentShape;
+    private Shape nextShape;
+    private int[][] coordinatesOfCurrentShape;
+    private int allRemovedLines;
+    private int linesRemovedInThisLevel;
+    private int level;
+    private int points;
 
-    SidePanel sidePanel;
-    ScoringSystem scoringSystem;
+    private SidePanel sidePanel;
+    private ScoringSystem scoringSystem;
 
     public Board() {
         this.setPreferredSize(new Dimension(Game.width, Game.height));
@@ -34,8 +33,8 @@ public class Board extends JPanel implements ActionListener {
         this.setLayout(null);
         this.addKeyListener(new GameKeyListener(this));
 
-        cycleDuration=600;
-        timer = new Timer(cycleDuration, this);
+        periodInterval =600;
+        timer = new Timer(periodInterval, this);
         scoringSystem = new ScoringSystem();
         board = new int[24][10];
         coordinatesOfCurrentShape = new int[4][2];
@@ -64,7 +63,6 @@ public class Board extends JPanel implements ActionListener {
             g.setColor(Color.WHITE);
             g.drawString("GAME OVER",50,this.getHeight()/2);
         }
-
 
         requestFocus();
     }
@@ -111,7 +109,7 @@ public class Board extends JPanel implements ActionListener {
 
     boolean checkNextPositionOfShape(int newX, int newY) {
 
-        if (newX >= board.length || newY < 0 || newY >= NUMBER_OF_COLUMNS)
+        if (newX >= board.length || newY < 0 || newY >= board[0].length)
             return false;
 
         return board[newX][newY] == -1;
@@ -176,6 +174,7 @@ public class Board extends JPanel implements ActionListener {
         return true;
     }
 
+    //removes previous location of shape and create the new one
     void updateBoard(int addedX, int addedY){
 
         deleteShape(coordinatesOfCurrentShape);
@@ -219,11 +218,13 @@ public class Board extends JPanel implements ActionListener {
         sidePanel.setLevel(level);
     }
 
-    void updateLevelAndCycleDuration(){
+    //increases level with every 10 lines removed
+    //decreases the interval period by 30 with each level (unless it gets to 60)
+    void updateLevelAndPeriodInterval(){
         if(linesRemovedInThisLevel%10==0 && linesRemovedInThisLevel != 0){
             level++;
             linesRemovedInThisLevel=0;
-            cycleDuration-= cycleDuration >= 60 ? 100 : 0;
+            periodInterval -= periodInterval >= 60 ? 30 : 0;
         }
     }
 
@@ -243,6 +244,22 @@ public class Board extends JPanel implements ActionListener {
 
         for (int i = 0; i < coordinates.length; i++)
             board[coordinates[i][0]][coordinates[i][1]] = -1;
+    }
+
+    boolean isGameStarted(){
+        return gameStared;
+    }
+
+    boolean isGamePaused(){
+        return isPaused;
+    }
+
+    boolean isGameOver(){
+        for (int i = 0; i < board[0].length; i++)
+            if(board[3][i] != -1)
+                return true;
+
+        return false;
     }
 
     void startGame() {
@@ -269,14 +286,6 @@ public class Board extends JPanel implements ActionListener {
         timer.stop();
     }
 
-    boolean isGameOver(){
-        for (int i = 0; i < NUMBER_OF_COLUMNS; i++)
-            if(board[3][i] != -1)
-                return true;
-
-        return false;
-    }
-
     void gameOver(){
         isGameOver=true;
         repaint();
@@ -286,6 +295,7 @@ public class Board extends JPanel implements ActionListener {
 
     void restartGame(){
         isGameOver=false;
+        isPaused=false;
         clearBoard();
         repaint();
         timer.setDelay(600);
@@ -297,7 +307,7 @@ public class Board extends JPanel implements ActionListener {
 
     int getCellSize(){ return cellSize; }
 
-    int getCycleDuration(){ return cycleDuration; }
+    int getPeriodInterval(){ return periodInterval; }
 
     void setSidePanel(SidePanel sidePanel){
         this.sidePanel = sidePanel;
@@ -312,7 +322,7 @@ public class Board extends JPanel implements ActionListener {
                     gameOver();
 
                 removeFullLines();
-                updateLevelAndCycleDuration();
+                updateLevelAndPeriodInterval();
                 updateStatistics();
                 generateNewShape();
                 currentX=2;

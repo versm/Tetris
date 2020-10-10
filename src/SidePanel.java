@@ -1,14 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
-
 
 public class SidePanel extends JPanel {
 
-    Board board;
-    JLabel level;
-    JLabel removedLines;
-    JLabel points;
+    private Board board;
+    private JLabel level;
+    private JLabel removedLines;
+    private JLabel points;
 
     public SidePanel(Board board) {
 
@@ -17,7 +15,6 @@ public class SidePanel extends JPanel {
         setPreferredSize(new Dimension(Game.width/2,Game.height));
         setBackground(new Color(153,153,255));
         setLayout(null);
-       // setBorder(BorderFactory.createSoftBevelBorder(5,Color.BLACK,Color.GRAY));
 
         JLabel nextShape = new JLabel("NEXT SHAPE");
         nextShape.setBounds(20,15,110,20);
@@ -27,48 +24,50 @@ public class SidePanel extends JPanel {
         JButton start = new JButton("START");
         start.setBounds(20,200,100,20);
         start.setBackground(new Color(176,178,166));
+        start.setBorder(BorderFactory.createLineBorder(Color.GRAY,3));
         start.addActionListener(e -> board.startGame());
 
         JButton pause = new JButton("PAUSE");
         pause.setBounds(20,235,100,20);
         pause.setBackground(new Color(176,178,166));
+        pause.setBorder(BorderFactory.createLineBorder(Color.GRAY,3));
         pause.addActionListener(e -> board.pauseGame());
 
         JButton finish = new JButton("FINISH");
         finish.setBounds(20,270,100,20);
         finish.setBackground(new Color(176,178,166));
+        finish.setBorder(BorderFactory.createLineBorder(Color.GRAY,3));
         finish.addActionListener(e -> board.gameOver());
 
+        level = new JLabel("0");
+        level.setBounds(15,320,150,35);
+        level.setForeground(Color.BLACK);
+        level.setFont(new Font("Arial", Font.BOLD, 42));
+
         JLabel levelLabel = new JLabel("LEVEL");
-        levelLabel.setBounds(10,320,70,20);
+        levelLabel.setBounds(15,360,70,20);
         levelLabel.setForeground(Color.BLACK);
         levelLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
-        level = new JLabel("0");
-        level.setBounds(110,320,38,20);
-        level.setForeground(Color.BLACK);
-        level.setFont(new Font("Arial", Font.BOLD, 16));
+        removedLines = new JLabel("0");
+        removedLines.setBounds(15,395,150,35);
+        removedLines.setForeground(Color.BLACK);
+        removedLines.setFont(new Font("Arial", Font.BOLD, 42));
 
         JLabel lines = new JLabel("LINES");
-        lines.setBounds(10,350,70,20);
+        lines.setBounds(15,435,70,20);
         lines.setForeground(Color.BLACK);
         lines.setFont(new Font("Arial", Font.BOLD, 16));
 
-        removedLines = new JLabel("0");
-        removedLines.setBounds(110,350,38,20);
-        removedLines.setForeground(Color.BLACK);
-        removedLines.setFont(new Font("Arial", Font.BOLD, 16));
+        points = new JLabel("0");
+        points.setBounds(15,470,150,35);
+        points.setForeground(Color.BLACK);
+        points.setFont(new Font("Arial", Font.BOLD, 42));
 
         JLabel pointsLabel = new JLabel("POINTS");
-        pointsLabel.setBounds(10,380,70,20);
+        pointsLabel.setBounds(15,510,70,20);
         pointsLabel.setForeground(Color.BLACK);
         pointsLabel.setFont(new Font("Arial", Font.BOLD, 16));
-
-        points = new JLabel("0");
-        points.setBounds(110,380,38,20);
-        points.setForeground(Color.BLACK);
-        points.setFont(new Font("Arial", Font.BOLD, 16));
-
 
         this.add(nextShape);
         this.add(start);
@@ -105,7 +104,7 @@ public class SidePanel extends JPanel {
         g.setColor(Color.BLACK);
         g.fillRect(10,50,130,130);
 
-        if(!board.gameStared)
+        if(!board.isGameStarted())
             return;
 
         displayNextShape(g);

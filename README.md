@@ -1,6 +1,6 @@
 # Tetris
 
-My impelmentation of the popular Tetris game in Java Swing.
+My implementation of the popular Tetris game in Java Swing.
 
 <img src="tetris_screenshot.jpg" width=400>
 
